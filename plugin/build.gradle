@@ -1,0 +1,43 @@
+apply plugin: 'groovy'  //这样保证as中能识别groovy，如果你不用groovy开发插件不需要的
+apply plugin: "com.gradle.plugin-publish"   //这个是发布到插件门户网站的插件
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()  //这个groovy是gradle自带，跟随gradle的版本进行变动
+
+    compile 'com.android.tools.build:builder:2.3.3'
+}
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+version = "0.0.1"    //配置插件的版本号
+group = "com.weiqi.build"   //插件的群组，插件的classpath会用到
+
+pluginBundle {
+
+    website = 'http://www.gradle.org/'
+    vcsUrl = 'https://github.com/gradle/gradle'
+    description = 'component gradle build'  //插件描述
+    tags = ['component', 'gradle build']  //插件的tag。可以通过这个在插件门户上搜索
+
+    plugins {
+        greetingsPlugin {
+            id = 'com.weiqi.build'   //插件的id，到时候apply的插件id
+            displayName = 'Gradle Build Plugin'
+        }
+    }
+}

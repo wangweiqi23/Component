@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">module_base</string>
+    <string name="need_login">请在主模块登陆</string>
+
+    <string name="permission_open_failure_tip">为了你能正常使用XX，需要在设置-应用-XX-权限中开启设备权限</string>
+    <string name="permission_rational_camera_and_audio">需要摄像头和麦克风权限，以正常使用直播相关功能</string>
+    <string name="permission_rational_app_setting_camera_and_audio">在设置-应用-XX-权限中开启摄像头和麦克风权限，以正常使用直播相关功能</string>
+    <string name="permission_storage_content">在设置-应用-XX-权限中开启存储空间权限，以正常使用相关功能</string>
+    <string name="permission_request">权限申请</string>
+    <string name="go_set_permission">去设置</string>
+    <string name="open_xx">开启xx</string>
+    <string name="permission_for_normal_use">为了你能正常使用XX，需要以下信息</string>
+
+    <string name="permission_location">位置信息</string>
+    <string name="permission_storage">存储空间</string>
+    <string name="permission_phone">设备信息</string>
+
+    <string name="next_step">下一步</string>
+
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+</resources>

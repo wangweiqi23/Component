@@ -1,0 +1,86 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion parent.ext.compileSdkVersion
+    buildToolsVersion parent.ext.buildToolsVersion
+
+    publishNonDefault true
+
+    defaultConfig {
+        applicationId parent.ext.applicationId
+        minSdkVersion parent.ext.minSdkVersion
+        targetSdkVersion parent.ext.targetSdkVersion
+        versionCode parent.ext.versionCode
+        versionName parent.ext.versionName
+
+        multiDexEnabled true
+        resConfig "zh"
+
+        ndk {
+            abiFilters "armeabi"
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName()]
+            }
+        }
+    }
+
+    //签名
+    signingConfigs {
+        release {
+            try {
+                v2SigningEnabled true
+                storeFile file("../keystore/release.keystore")
+                storePassword "testres"
+                keyAlias "testres"
+                keyPassword "testres"
+            } catch (ex) {
+                throw new InvalidUserDataException(ex.toString())
+            }
+        }
+
+        debug {
+            storeFile file("../keystore/debug.keystore")
+        }
+    }
+
+    buildTypes {
+        release {
+            shrinkResources true
+            zipAlignEnabled true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/java"
+        main.jni.srcDirs = [] // This prevents// the auto generation of Android.mk
+        main.jniLibs.srcDirs = ['../jniLibs'];
+    }
+
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
+    }
+}
+
+dependencies {
+    if (isRunAlone.toBoolean()) {
+        releaseCompile project(path: ':module_base', configuration: 'release')
+        debugCompile project(path: ':module_base', configuration: 'debug')
+    } else {
+        releaseCompile project(path: ':module_home', configuration: 'release')
+        debugCompile project(path: ':module_home', configuration: 'debug')
+        releaseCompile project(path: ':module_cat', configuration: 'release')
+        debugCompile project(path: ':module_cat', configuration: 'debug')
+        releaseCompile project(path: ':module_dog', configuration: 'release')
+        debugCompile project(path: ':module_dog', configuration: 'debug')
+    }
+}

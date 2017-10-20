@@ -1,0 +1,1 @@
+include ':app', ':module_cat', ':module_dog', ':module_base', ':module_home', ':plugin'

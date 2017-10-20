@@ -1,0 +1,365 @@
+/**
+ * 这里有两个任务脚本都是针对组件化资源文件的处理，分为： compareResources 和 renameResources
+ *
+ * 一、 compareResources：查找组件间名称相同的资源文件
+ *
+ * 二、 renameResources：添加组件中的资源文件名称前缀、java文件中资源引用、layout文件中引用以及Manifest中文件引用
+ * 例如 module_base下的资源文件 /drawable/bg_abc.xml 会被改成 /drawable/base_bg_abc.xml
+ * java或者布局文件的引用 R.drawable.bg_abc 会被改成 R.drawable.base_bg_abc
+ *
+ * 注意 说明一下：脚本中资源的依赖以base优先 部分处理异常需手动调整
+ *
+ * 三、 renameResources －P revoke：去除组件中的资源文件名称前缀、java文件中资源引用、layout文件中引用以及Manifest中文件引用
+ * 其作用与renameResources 命令相反
+ *
+ */
+
+def PARAM_REVOKE = "revoke"
+
+//资源文件路径
+def DRAWABLE_DIR = "/src/main/res/drawable/"
+def DRAWABLE_XXHDPI_DIR = "/src/main/res/drawable-xxhdpi/"
+def LAYOUT_DIR = "/src/main/res/layout/"
+
+//java文件路径
+def JAVA_DIR = "/src/main/"
+
+//Manifest文件路径
+def DEBUG_MANIFEST_DIR = "/src/main/debug/"
+def RELEASE_MANIFEST_DIR = "/src/main/release/"
+
+//作为依赖的模块名称
+def COMPILE_MODULE_NAMES = ["module_base", 'module_h5'] as String[]
+
+//所有模块名称
+def MODULE_NAMES = "module_base,module_home,module_cat,module_dog"
+
+task compareResources << {
+    Map outFileNameMap = new HashMap<String, FileAttrObject>()
+    String[] moduleNameArray = getModuleNameArray(MODULE_NAMES)
+    for (int l = 0; l < moduleNameArray.length - 1; l++) {
+        for (int r = l + 1; r < moduleNameArray.length; r++) {
+            onCompreDir(moduleNameArray.getAt(l), moduleNameArray.getAt(r), DRAWABLE_DIR, outFileNameMap)
+            onCompreDir(moduleNameArray.getAt(l), moduleNameArray.getAt(r), DRAWABLE_XXHDPI_DIR, outFileNameMap)
+            onCompreDir(moduleNameArray.getAt(l), moduleNameArray.getAt(r), LAYOUT_DIR, outFileNameMap)
+        }
+    }
+    if (outFileNameMap.size() != 0) {
+        print "发现异常 执行结果：${outFileNameMap.size()}\n"
+        for (FileAttrObject object : outFileNameMap.values()) {
+            print("${object.name} [${object.modulePath}] [${object.dirPath}]\n");
+        }
+        println()
+    } else {
+        println "未发现执行异常"
+    }
+}
+
+task renameResources << {
+    println "start task ${project.gradle.startParameter.taskNames.toString()}"
+
+    boolean isRevoke = false
+
+    if (project.hasProperty(PARAM_REVOKE)) {
+        isRevoke = true
+    }
+
+    Map outFileNameMap = new HashMap<String, String>()
+    String[] moduleNameArray = getModuleNameArray(MODULE_NAMES)
+
+    String[] compileResourcePrefixs = new String[COMPILE_MODULE_NAMES.length]
+    for (int i = 0; i < COMPILE_MODULE_NAMES.length; i++) {
+        compileResourcePrefixs[i] = getResourcePrefix(COMPILE_MODULE_NAMES[i])
+    }
+    println "current compileResourcePrefixs:" + compileResourcePrefixs.toString()
+
+    //先处理资源文件名
+    for (String moduleName : moduleNameArray) {
+        if (!isEmpty(moduleName)) {
+            println "current moduleName:" + moduleName
+            onRenameResourcesName(moduleName, DRAWABLE_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+            onRenameResourcesName(moduleName, DRAWABLE_XXHDPI_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+            onRenameResourcesName(moduleName, LAYOUT_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+        }
+    }
+
+    outFileNameMap.each {
+        entry ->
+            println("outFileNameMap key:${entry.key}  value:${entry.value}");
+    }
+
+    for (String moduleName : moduleNameArray) {
+        if (!isEmpty(moduleName)) {
+            onRenameJava(moduleName, JAVA_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+            onRenameLayout(moduleName, LAYOUT_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+            onRenameManifest(moduleName, DEBUG_MANIFEST_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+            onRenameManifest(moduleName, RELEASE_MANIFEST_DIR, outFileNameMap, isRevoke, compileResourcePrefixs)
+        }
+    }
+    println "end task ${project.gradle.startParameter.taskNames.toString()}"
+}
+
+private String[] getModuleNameArray(String moduleNames) {
+    String[] array = moduleNames.split(",")
+    if (array == null || array.size() == 0) {
+        return moduleNames
+    }
+    return array
+}
+
+/**
+ * 处理 module下面的资源文件 图片 布局文件名
+ *
+ * @param moduleName 模块名
+ * @param dirPath 资源文件路径
+ * @param outMap 记录base模块下map
+ */
+private void onRenameResourcesName(String moduleName, String dirPath, Map<String, String> outMap, boolean isRevoke, String... compileResourcePrefixs) {
+    File dir = project.file("./" + moduleName + dirPath)
+    if (!dir.exists()) {
+        println "未找到相关文件夹 ${moduleName} ${dir.getAbsolutePath()}"
+        return
+    }
+    String resourcePrefix = getResourcePrefix(moduleName)
+    dir.eachFile {
+        file ->
+            if (file.name.endsWith(".png") || file.name.endsWith(".xml")) {
+                if (!isRevoke && compileResourcePrefixs.contains(resourcePrefix)) {
+                    if (dirPath.contains("layout")) {
+                        outMap.put("@layout/" + file.name.split("\\.")[0], resourcePrefix)
+                    } else if (dirPath.contains("drawable")) {
+                        outMap.put("@drawable/" + file.name.split("\\.")[0], resourcePrefix)
+                    }
+                }
+                boolean isModify = false
+                String oldFileName = file.name
+                if ((!isRevoke && !isStartWithFlag(file.name, resourcePrefix)) || (isRevoke && isStartWithFlag(file.name, resourcePrefix))) {
+                    String newFileName = isRevoke ? file.name.substring(resourcePrefix.length()) : (resourcePrefix + file.name)
+                    file.renameTo(file.getAbsolutePath().replace(file.name, newFileName))
+                    println "onRenameResources moduleName:${moduleName} fromFile:${oldFileName} toFile:${newFileName}"
+                    isModify = true
+                }
+                printlnOutFile(isModify, isRevoke ? "onRenameResources revoke png&xml" : "onRenameResources png&xml", moduleName, file.name)
+            }
+    }
+}
+
+/**
+ * 处理 module下面的java文件
+ *
+ * @param moduleName 模块名
+ * @param dirPath 资源文件路径
+ * @param outMap 记录base模块下map
+ */
+private void onRenameJava(String moduleName, String dirPath, Map<String, String> outMap, boolean isRevoke, String... compileResourcePrefixs) {
+    String resourcePrefix = getResourcePrefix(moduleName)
+    FileTree tree = fileTree(dir: "./" + moduleName + dirPath)
+    tree.include '**/*.java'
+    tree.each {
+        File file ->
+            boolean isModify = false
+            def text = file.getText("utf-8")
+            String flag = "R.layout."
+            if (isNeedModify(text, flag, isRevoke, resourcePrefix, compileResourcePrefixs)) {
+                //处理java文件中的布局引用
+                if (isRevoke) {
+                    for (int i = 0; i < compileResourcePrefixs.length; i++) {
+                        text = text.replace(flag + compileResourcePrefixs[i], flag)
+                    }
+                    text = text.replace(flag + resourcePrefix, flag)
+                } else {
+                    text = text.replace(flag, flag + resourcePrefix)
+                }
+                isModify = true
+                println "onRenameJava layout 修改成功 file:" + moduleName + " " + file.name
+            } else {
+                println "onRenameJava layout 忽略 已经修改过了 file:" + moduleName + " " + file.name
+            }
+
+            flag = "R.drawable."
+            if (isNeedModify(text, flag, isRevoke, resourcePrefix, compileResourcePrefixs)) {
+                //处理java文件中的图片引用
+                if (isRevoke) {
+                    for (int i = 0; i < compileResourcePrefixs.length; i++) {
+                        text = text.replace(flag + compileResourcePrefixs[i], flag)
+                    }
+                    text = text.replace(flag + resourcePrefix, flag)
+                } else {
+                    text = text.replace(flag, flag + resourcePrefix)
+                }
+                isModify = true
+                println "onRenameJava drawable 修改成功 file:" + moduleName + " " + file.name
+            } else {
+                println "onRenameJava drawable 忽略 已经修改过了 file:" + moduleName + " " + file.name
+            }
+            file.write(text, "utf-8")
+            printlnOutFile(isModify, isRevoke ? "onRenameJava revoke java" : "onRenameJava java", moduleName, file.name)
+    }
+}
+
+/**
+ * 处理 module下面的layout文件中的引用
+ *
+ * @param moduleName 模块名
+ * @param dirPath 资源文件路径
+ * @param outMap 记录base模块下map
+ */
+private void onRenameLayout(String moduleName, String dirPath, Map<String, String> outMap, boolean isRevoke, String... compileResourcePrefixs) {
+    String resourcePrefix = getResourcePrefix(moduleName)
+    FileTree tree = fileTree(dir: "./" + moduleName + dirPath)
+    tree.include '**/*.xml'
+    tree.each {
+        File file ->
+            boolean isModify = false
+            file.eachLine("utf-8") {
+                isModify = replaceXmlLineByFlag(file, it, "@layout/", resourcePrefix, outMap, isRevoke, compileResourcePrefixs)
+                isModify = replaceXmlLineByFlag(file, it, "@drawable/", resourcePrefix, outMap, isRevoke, compileResourcePrefixs)
+            }
+            printlnOutFile(isModify, "onRenameLayout layout", moduleName, file.name)
+    }
+}
+
+/**
+ * 处理 module下面的AndroidManifest文件中的引用
+ *
+ * @param moduleName 模块名
+ * @param dirPath 资源文件路径
+ * @param outMap 记录base模块下map
+ */
+private void onRenameManifest(String moduleName, String dirPath, Map<String, String> outMap, boolean isRevoke, String... compileResourcePrefixs) {
+    File file = project.file("./" + moduleName + dirPath + "AndroidManifest.xml")
+    if (!file.exists()) {
+        println "未找到相关文件夹 ${moduleName} ${file.getAbsolutePath()}"
+        return
+    }
+    boolean isModify = false
+    String resourcePrefix = getResourcePrefix(moduleName)
+    String flag = "@drawable/"
+
+    file.eachLine("utf-8") {
+        isModify = replaceXmlLineByFlag(file, it, flag, resourcePrefix, outMap, isRevoke, compileResourcePrefixs)
+    }
+    printlnOutFile(isModify, "onRenameManifest manifest", (moduleName + dirPath), file.name)
+}
+
+private boolean replaceXmlLineByFlag(File file, String lineStr, String flag, String resourcePrefix, Map<String, String> outMap, boolean isRevoke, String... compileResourcePrefixs) {
+    boolean isModify = false
+    if (isNeedModify(lineStr, flag, isRevoke, resourcePrefix, compileResourcePrefixs)) {
+        def replaceTextName
+        def index = lineStr.indexOf(flag)
+        replaceTextName = lineStr.substring(index, lineStr.indexOf("\"", index))
+        println "replaceXmlLineByFlag replaceTextName:${replaceTextName}"
+
+        def fileText = file.getText("utf-8")
+        if (isRevoke) {
+            for (int i = 0; i < compileResourcePrefixs.length; i++) {
+                if (lineStr.contains(flag + compileResourcePrefixs[i])) {
+                    resourcePrefix = compileResourcePrefixs[i]
+                    break
+                }
+            }
+            println "replaceXmlLineByFlag fromLine:${lineStr} toLine:${lineStr.replace(flag + resourcePrefix, flag)}"
+            fileText = fileText.replace(lineStr, lineStr.replace(flag + resourcePrefix, flag))
+        } else {
+            if (outMap.containsKey(replaceTextName)) {
+                resourcePrefix = outMap.get(replaceTextName)
+            }
+            println "replaceXmlLineByFlag fromLine:${lineStr} toLine:${lineStr.replace(flag, flag + resourcePrefix)}"
+            fileText = fileText.replace(lineStr, lineStr.replace(flag, flag + resourcePrefix))
+        }
+        file.write(fileText, "utf-8")
+        isModify = true
+    }
+    return isModify
+}
+
+/**
+ * 比对 工程中资源文件 提取重名文件
+ *
+ * @param lModuleName 对比模块
+ * @param rModuleName 对比模块
+ * @param dirPath 对比路径
+ * @param outMap 对比结果
+ */
+private void onCompreDir(String lModuleName, String rModuleName, String dirPath, Map outMap) {
+    File lDir = project.file("./" + lModuleName + dirPath)
+    File rDir = project.file("./" + rModuleName + dirPath)
+    if (!lDir.exists() || !rDir.exists()) {
+        println "未找到相关文件夹 ${lModuleName} or ${rModuleName}"
+        return
+    }
+    String[] lFileList = lDir.list()
+    String[] rFileList = rDir.list()
+    println "onCompreDir lDir:${lModuleName} & rDir:${rModuleName}  lDirList:${lDir.list()} & rDirList:${rDir.list()}"
+    for (String fileName : lFileList) {
+        if (!fileName.startsWith(".") && rFileList.contains(fileName)) {
+            String key = dirPath + fileName
+            if (outMap.containsKey(key)) {
+                FileAttrObject object = outMap.get(key)
+                if (!object.modulePath.contains(lModuleName)) {
+                    object.modulePath = object.modulePath + ",${lModuleName}"
+                }
+                if (!object.modulePath.contains(rModuleName)) {
+                    object.modulePath = object.modulePath + ",${rModuleName}"
+                }
+            } else {
+                FileAttrObject object = new FileAttrObject()
+                object.name = fileName
+                object.modulePath = "${lModuleName},${rModuleName}"
+                object.dirPath = dirPath
+                outMap.put(key, object)
+            }
+        }
+    }
+}
+
+private void printlnOutFile(boolean isModify, String tag, String moduleName, String fileName) {
+    String content
+    if (isModify) {
+        content = tag + " 修改成功"
+    } else {
+        content = tag + " 忽略 已经修改过了"
+    }
+    println "${content} file:${moduleName} ${fileName}"
+}
+
+private String getResourcePrefix(String moduleName) {
+    return moduleName.split("_")[1] + "_"
+}
+
+private boolean isNeedModify(String content, String flag, boolean isRevoke, String resourcePrefix, String... compileResourcePrefixs) {
+    boolean isNeed = false
+    if (content.contains(flag)) {
+        isNeed = !isRevoke
+        if (content.contains(flag + resourcePrefix)) {
+            isNeed = isRevoke
+        }
+        for (int i = 0; i < compileResourcePrefixs.length; i++) {
+            if (content.contains(flag + compileResourcePrefixs[i])) {
+                isNeed = isRevoke
+                break
+            }
+        }
+    }
+    return isNeed
+}
+
+private boolean isStartWithFlag(String str, String flag) {
+    if (str.startsWith(flag)) {
+        return true
+    }
+    return false
+}
+
+private boolean isEmpty(String str) {
+    if (str == null || str.equals("")) {
+        return true
+    }
+    return false
+}
+
+class FileAttrObject {
+    String name;
+    String modulePath;
+    String dirPath;
+}

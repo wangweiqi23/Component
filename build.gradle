@@ -1,0 +1,62 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+apply from: 'compare.gradle'
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url "https://jitpack.io"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.3'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url "https://jitpack.io"
+        }
+    }
+
+    ext {
+        // Application Version Config
+        compileSdkVersion = 25
+        buildToolsVersion = '25.0.0'
+        applicationId = 'com.weiqi.test'
+        moduleHomeId = 'com.weiqi.home'
+        moduleCatId = 'com.weiqi.cat'
+        moduleDogId = 'com.weiqi.dog'
+        minSdkVersion = 14
+        targetSdkVersion = 25
+        versionCode = 10000
+        versionName = "1.0.0"
+
+        releaseChannels = false
+
+        // Android Library
+        libSupportV4 = 'com.android.support:support-v4:25.0.1'
+        libV7 = 'com.android.support:appcompat-v7:25.0.1'
+        libDesign = 'com.android.support:design:25.0.1'
+        libMultiDex = 'com.android.support:multidex:1.0.0'
+        libConstraint = 'com.android.support.constraint:constraint-layout:1.0.2'
+
+        // Third Library
+        libSlog = 'com.github.wangweiqi23:SLog:v1.0.0'
+        libGson = 'com.google.code.gson:gson:2.7'
+        libEventBus = 'org.greenrobot:eventbus:3.0.0'
+        libEventBusAnnotition = 'org.greenrobot:eventbus-annotation-processor:3.0.1'
+
+        //ARouter
+        libARouter = "com.alibaba:arouter-api:${AROUTER_VERSION}"
+        libARouterAnnotition = "com.alibaba:arouter-compiler:${AROUTER_ANNO_VERSION}"
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

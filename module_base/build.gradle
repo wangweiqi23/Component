@@ -1,0 +1,63 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion parent.ext.compileSdkVersion
+    buildToolsVersion parent.ext.buildToolsVersion
+
+    publishNonDefault true
+
+    defaultConfig {
+        minSdkVersion parent.ext.minSdkVersion
+        targetSdkVersion parent.ext.targetSdkVersion
+
+        multiDexEnabled true
+        resConfig "zh"
+
+        ndk {
+            abiFilters "armeabi"
+        }
+
+        vectorDrawables.useSupportLibrary = true
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [ eventBusIndex : 'com.weiqi.test.EvIndex' ]
+            }
+        }
+
+    }
+
+    buildTypes {
+        release {
+            buildConfigField("boolean", "isRunAlone", "${isRunAlone.toBoolean()}")
+        }
+        debug {
+            buildConfigField("boolean", "isRunAlone", "${isRunAlone.toBoolean()}")
+        }
+    }
+
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile parent.ext.libV7
+    compile parent.ext.libDesign
+    compile parent.ext.libMultiDex
+    compile parent.ext.libConstraint
+    compile('com.github.afollestad.material-dialogs:commons:0.8.5.8@aar') {
+        transitive = true
+    }
+
+    compile parent.ext.libSlog
+    compile parent.ext.libEventBus
+    compile parent.ext.libARouter
+
+    annotationProcessor parent.ext.libEventBusAnnotition
+}

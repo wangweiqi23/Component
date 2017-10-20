@@ -1,0 +1,95 @@
+if (isRunAlone.toBoolean()) {
+    apply plugin: 'com.android.application'
+} else {
+    apply plugin: 'com.android.library'
+}
+
+android {
+    compileSdkVersion parent.ext.compileSdkVersion
+    buildToolsVersion parent.ext.buildToolsVersion
+
+    publishNonDefault true
+
+    defaultConfig {
+        if (isRunAlone.toBoolean()) {
+            applicationId parent.ext.moduleHomeId
+        }
+        minSdkVersion parent.ext.minSdkVersion
+        targetSdkVersion parent.ext.targetSdkVersion
+        versionCode parent.ext.versionCode
+        versionName parent.ext.versionName
+
+        multiDexEnabled true
+        resConfig "zh"
+
+        ndk {
+            abiFilters "armeabi"
+        }
+
+        vectorDrawables.useSupportLibrary = true
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [moduleName: project.getName()]
+            }
+        }
+    }
+
+    //签名
+    signingConfigs {
+        release {
+            try {
+                v2SigningEnabled true
+                storeFile file("../keystore/release.keystore")
+                storePassword "testres"
+                keyAlias "testres"
+                keyPassword "testres"
+            } catch (ex) {
+                throw new InvalidUserDataException(ex.toString())
+            }
+        }
+
+        debug {
+            storeFile file("../keystore/debug.keystore")
+        }
+    }
+
+    buildTypes {
+        release {
+            shrinkResources true
+            zipAlignEnabled true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    resourcePrefix 'home_'
+
+    sourceSets {
+        main {
+            if (isRunAlone.toBoolean()) {
+                manifest.srcFile 'src/main/debug/AndroidManifest.xml'
+                java.srcDirs = ['src/main/java', 'src/main/debug/java']
+                jniLibs.srcDirs = ['../jniLibs'];
+            } else {
+                manifest.srcFile 'src/main/release/AndroidManifest.xml'
+            }
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile project(':module_base')
+
+    annotationProcessor parent.ext.libARouterAnnotition
+}

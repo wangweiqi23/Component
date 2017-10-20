@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18sp"
+        android:gravity="center"
+        android:text="@string/open_xx"
+        android:textColor="@color/home_black"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:text="@string/permission_for_normal_use"
+        android:textSize="14sp"
+        android:textColor="@color/home_black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/standard_margin"
+        android:layout_marginRight="@dimen/standard_margin"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/home_storage"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/icon_permission_storage"
+            android:drawablePadding="20dp"
+            android:gravity="center"
+            android:text="@string/permission_storage"
+            android:textSize="14sp"
+            android:textColor="@color/home_black" />
+
+        <TextView
+            android:id="@+id/home_phone"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/icon_permission_equipment"
+            android:drawablePadding="20dp"
+            android:gravity="center"
+            android:text="@string/permission_phone"
+            android:textColor="@color/home_black"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/home_location"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/icon_permission_location"
+            android:drawablePadding="20dp"
+            android:gravity="center"
+            android:text="@string/permission_location"
+            android:textSize="14sp"
+            android:textColor="@color/home_black" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/home_next_step_btn"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginLeft="@dimen/standard_margin_half"
+        android:layout_marginRight="@dimen/standard_margin_half"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="@dimen/standard_margin"
+        android:background="@drawable/bg_corner_blue"
+        android:stateListAnimator="@null"
+        android:text="@string/next_step"
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+</LinearLayout>
