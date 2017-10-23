@@ -10,6 +10,7 @@ import com.alibaba.android.arouter.facade.annotation.Route;
 import com.alibaba.android.arouter.launcher.ARouter;
 import com.weiqi.modulebase.DataConstants;
 import com.weiqi.modulebase.activity.BaseActivity;
+import com.weiqi.modulebase.manager.AccountManager;
 import com.weiqi.modulebase.moduleinterface.provider.ICatProvider;
 import com.weiqi.modulebase.util.KeyUtil;
 import com.weiqi.modulecat.R;
@@ -39,14 +40,17 @@ public class CatActivity extends BaseActivity {
     @Override
     protected void initView() {
         ((TextView) findViewById(R.id.tv_title)).setText("CatActivity");
-        ((TextView) findViewById(R.id.tv_name)).setText("name:Kitty");
+        ((TextView) findViewById(R.id.tv_name)).setText(String.format("喵咪名称:Kitty\n  数据库中 " +
+                "主人名称：%s", AccountManager.getAccount() != null ? AccountManager.getAccount()
+                .getName() : null));
         ((TextView) findViewById(R.id.tv_age)).setText(String.format("age:%s \naliPayId:%s",
                 mAge, KeyUtil.getAlipayKey()));
 
         String foodNumb = null;
         try {
             //TODO 可以用工具类优化
-            Context homeContext = this.createPackageContext("com.weiqi.test",
+            Context homeContext = this.createPackageContext(com.weiqi.modulebase.BuildConfig
+                            .isRunAlone ? "com.weiqi.home" : "com.weiqi.test",
                     CONTEXT_IGNORE_SECURITY);
             SharedPreferences homeContextSharedPreferences = homeContext.getSharedPreferences
                     ("feeding", Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);
@@ -59,7 +63,8 @@ public class CatActivity extends BaseActivity {
     }
 
     @Override
-    public void onContinue() {
+    protected void finishInitView() {
 
     }
+
 }

@@ -18,6 +18,13 @@
         android:background="@drawable/icon_data_school"
         />
 
+    <TextView
+        android:id="@+id/tv_person_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="姓名"
+        />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

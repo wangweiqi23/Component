@@ -36,9 +36,10 @@ public class BaseApplicationHelper {
 
     public static void init(boolean debug, Application context) {
 
-        boolean isRunAlone = !BuildConfig.isRunAlone;
+        boolean isRunAlone = BuildConfig.isRunAlone;
 
-        initLog(context);
+        initLog(debug, context);
+        SLog.d("BaseAppHelper","debug:"+ debug+" isRunAlone:"+isRunAlone);
 
         if (debug) {
             ARouter.openLog();
@@ -46,7 +47,7 @@ public class BaseApplicationHelper {
         }
         ARouter.init(context);
 
-        ContextUtil.init(context);
+        ContextUtil.init(isRunAlone, context);
 
         ToastUtil.init(context);
         AccountManager.init();
@@ -62,7 +63,7 @@ public class BaseApplicationHelper {
 
     }
 
-    private static void initLog(Context context) {
+    private static void initLog(boolean debug, Context context) {
         //init log
         Settings settings = new Settings.Builder()
                 .context(context.getApplicationContext())//获取设备信息等写到日志文件头部
@@ -95,7 +96,7 @@ public class BaseApplicationHelper {
             }
         });
 
-        if (BuildConfig.DEBUG) {
+        if (debug) {
             SLog.init(settings, consolePrinter, filePrinter);
         } else {
             SLog.init(settings, filePrinter);//非debug环境 关闭consolePrinter

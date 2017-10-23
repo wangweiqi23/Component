@@ -15,7 +15,7 @@ public class AccountDbOperation {
 
     public static boolean saveAccount(Account account) {
         boolean isSave = false;
-        AccountDBHelper accountDBHelper = new AccountDBHelper(ContextUtil.getContext());
+        AccountDBHelper accountDBHelper = new AccountDBHelper(ContextUtil.getDBContext());
         SQLiteDatabase db = accountDBHelper.getWritableDatabase();
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -41,7 +41,7 @@ public class AccountDbOperation {
 
     public static Account query() {
         Account account = new Account();
-        AccountDBHelper accountDBHelper = new AccountDBHelper(ContextUtil.getContext());
+        AccountDBHelper accountDBHelper = new AccountDBHelper(ContextUtil.getDBContext());
         SQLiteDatabase db = accountDBHelper.getWritableDatabase();
 
         Cursor cursor = db.query(AccountDBHelper.TABLE_NAME,

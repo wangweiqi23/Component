@@ -364,14 +364,6 @@ class BuildPlugin implements Plugin<Project>{
         return path + MAP_SEPARATOR + hash + "\n"
     }
 
-    private void makeAAR(String module) {
-        println("--------------- make : " + module + "-release@aar begin ---------------");
-        def command = "./gradlew " + module + ":assembleRelease -P alone"
-        def proc = command.execute()
-        proc.waitForProcessOutput(System.out, System.err)
-        println("--------------- make : " + module + "-release@aar finish ---------------");
-    }
-
     private class AssembleTask {
         boolean isAssemble = false;
         boolean isBuild = false;

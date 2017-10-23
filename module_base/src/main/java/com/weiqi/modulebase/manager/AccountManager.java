@@ -17,7 +17,7 @@ public class AccountManager {
     public static synchronized void init() {
         mAccount = AccountDbOperation.query();
         if (mAccount == null) {
-            SLog.e(TAG ," init account error");
+            SLog.e(TAG, " init account error");
         }
     }
 
@@ -25,9 +25,19 @@ public class AccountManager {
         return mAccount.isLogin();
     }
 
-    public static synchronized void save(Account account) {
+    public static synchronized boolean save(Account account) {
+        boolean isSave = false;
         if (!AccountDbOperation.saveAccount(account)) {
-            SLog.e(TAG ," save account error");
+            SLog.e(TAG, " save account error");
+        } else {
+            mAccount = account;
+            isSave = true;
         }
+
+        return isSave;
+    }
+
+    public static Account getAccount() {
+        return mAccount;
     }
 }

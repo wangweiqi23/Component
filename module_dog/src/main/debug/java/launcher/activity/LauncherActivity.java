@@ -3,7 +3,7 @@ package launcher.activity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 
-import com.weiqi.modulebase.activity.BaseActivity;
+import com.weiqi.modulebase.activity.BaseLauncherActivity;
 import com.weiqi.modulebase.model.dog.DogObject;
 import com.weiqi.moduledog.R;
 import com.weiqi.moduledog.fragment.DogFragment;
@@ -12,14 +12,14 @@ import com.weiqi.moduledog.fragment.DogFragment;
  * Created by alexwangweiqi on 17/9/5.
  */
 
-public class LauncherActivity extends BaseActivity {
+public class LauncherActivity extends BaseLauncherActivity {
 
     private static final String TAG = LauncherActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_laucher);
+        setContentView(R.layout.activity_launcher);
     }
 
     @Override

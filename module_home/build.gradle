@@ -4,6 +4,8 @@ if (isRunAlone.toBoolean()) {
     apply plugin: 'com.android.library'
 }
 
+//apply plugin: 'buildplugin'
+
 android {
     compileSdkVersion parent.ext.compileSdkVersion
     buildToolsVersion parent.ext.buildToolsVersion
@@ -56,8 +58,6 @@ android {
 
     buildTypes {
         release {
-            shrinkResources true
-            zipAlignEnabled true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
@@ -65,6 +65,11 @@ android {
         debug {
             signingConfig signingConfigs.debug
         }
+    }
+
+    lintOptions {
+        abortOnError false
+        ignoreWarnings true
     }
 
     resourcePrefix 'home_'
@@ -79,11 +84,6 @@ android {
                 manifest.srcFile 'src/main/release/AndroidManifest.xml'
             }
         }
-    }
-
-    lintOptions {
-        abortOnError false
-        ignoreWarnings true
     }
 }
 

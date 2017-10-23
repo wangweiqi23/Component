@@ -27,3 +27,20 @@
 #SLog
 -keepattributes SourceFile, LineNumberTable
 -keep class com.weiqi.slog.** { *; }
+
+-ignorewarnings
+
+-dontoptimize
+
+-keepattributes Signature,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
+
+-keep class **.R$* {   *;  }
+
+-dontwarn android.support.**
+-keep class android.support.** { *; }
+
+-dontwarn android.support.v4.**
+-keep class android.support.v4.** { *; }
+-keep public class * extends android.support.v4.**
+-keep public class * extends android.app.Fragment
+-keep public class * extends javax.swing.AbstractAction

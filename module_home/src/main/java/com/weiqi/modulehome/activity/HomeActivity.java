@@ -20,6 +20,8 @@ import com.alibaba.android.arouter.launcher.ARouter;
 import com.weiqi.modulebase.DataConstants;
 import com.weiqi.modulebase.activity.BaseActivity;
 import com.weiqi.modulebase.fragment.BaseFragment;
+import com.weiqi.modulebase.manager.AccountManager;
+import com.weiqi.modulebase.model.account.Account;
 import com.weiqi.modulebase.model.dog.DogObject;
 import com.weiqi.modulebase.moduleinterface.provider.ICatProvider;
 import com.weiqi.modulebase.moduleinterface.provider.IDogProvider;
@@ -89,6 +91,15 @@ public class HomeActivity extends BaseActivity implements IndicatorViewPager
         initViewPager();
     }
 
+    @Override
+    protected void finishInitView() {
+        Account account = AccountManager.getAccount();
+        if (account != null && account.isLogin()) {
+            ((TextView) findViewById(R.id.tv_person_name)).setText(String.format("姓名：%s", account
+                    .getName()));
+        }
+    }
+
     private void initFragment() {
         mCatFragment = (BaseFragment) ARouter.getInstance()
                 .build(ICatProvider.CAT_FRAGMENT)
@@ -107,6 +118,9 @@ public class HomeActivity extends BaseActivity implements IndicatorViewPager
     }
 
     private void initViewPager() {
+        if (mCatFragment == null || mDogFragment == null) {
+            return;
+        }
         final int selectColor = ContextCompat.getColor(this, R.color.gold);
         int unSelectColor = ContextCompat.getColor(this, R.color.gray);
         mIndicator.setOnTransitionListener(new OnTransitionTextListener().setColor(selectColor,
@@ -129,11 +143,6 @@ public class HomeActivity extends BaseActivity implements IndicatorViewPager
 
     @Override
     public void onIndicatorPageChange(int preItem, int currentItem) {
-
-    }
-
-    @Override
-    public void onContinue() {
 
     }
 
