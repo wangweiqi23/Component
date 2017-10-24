@@ -21,6 +21,12 @@ allprojects {
         maven {
             url "https://jitpack.io"
         }
+        flatDir {
+            dirs '../componentrelease' //this way we can find the .aar file in  folder
+        }
+        flatDir {
+            dirs '../libs'
+        }
     }
 
     ext {

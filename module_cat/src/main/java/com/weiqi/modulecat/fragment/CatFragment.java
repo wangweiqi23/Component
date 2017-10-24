@@ -42,7 +42,7 @@ public class CatFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         TextView textView = new TextView(getActivity());
-        textView.setText("this is a Cat \nage:" + mAge);
+        textView.setText("This is a Cat \nage:" + mAge);
         return textView;
     }
 

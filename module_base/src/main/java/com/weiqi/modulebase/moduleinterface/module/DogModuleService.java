@@ -12,7 +12,7 @@ import com.weiqi.modulebase.moduleinterface.provider.IDogProvider;
 
 public class DogModuleService {
     private static boolean hasModule() {
-        return BuildConfig.isRunAlone && ModuleManager.getInstance().hasModule(IDogProvider
+        return BuildConfig.isAppBuild && ModuleManager.getInstance().hasModule(IDogProvider
                 .DOG_SERVICE);
     }
 

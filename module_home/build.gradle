@@ -1,10 +1,10 @@
-if (isRunAlone.toBoolean()) {
-    apply plugin: 'com.android.application'
-} else {
-    apply plugin: 'com.android.library'
-}
+//if (isRunAlone.toBoolean()) {
+//    apply plugin: 'com.android.application'
+//} else {
+//    apply plugin: 'com.android.library'
+//}
 
-//apply plugin: 'buildplugin'
+apply plugin: 'buildplugin'
 
 android {
     compileSdkVersion parent.ext.compileSdkVersion

@@ -1,4 +1,4 @@
-apply plugin: 'com.android.library'
+apply plugin: 'buildplugin'
 
 android {
     compileSdkVersion parent.ext.compileSdkVersion
@@ -29,10 +29,10 @@ android {
 
     buildTypes {
         release {
-            buildConfigField("boolean", "isRunAlone", "${isRunAlone.toBoolean()}")
+            buildConfigField("boolean", "isAppBuild", "${isAppBuild.toBoolean()}")
         }
         debug {
-            buildConfigField("boolean", "isRunAlone", "${isRunAlone.toBoolean()}")
+            buildConfigField("boolean", "isAppBuild", "${isAppBuild.toBoolean()}")
         }
     }
 

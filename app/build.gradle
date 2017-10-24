@@ -1,4 +1,10 @@
-apply plugin: 'com.android.application'
+//if (isRunAlone.toBoolean()) {
+//    apply plugin: 'com.android.application'
+//} else {
+//    apply plugin: 'com.android.library'
+//}
+
+apply plugin: 'buildplugin'
 
 android {
     compileSdkVersion parent.ext.compileSdkVersion
@@ -72,15 +78,17 @@ android {
 }
 
 dependencies {
-    if (isRunAlone.toBoolean()) {
-        releaseCompile project(path: ':module_base', configuration: 'release')
-        debugCompile project(path: ':module_base', configuration: 'debug')
-    } else {
-        releaseCompile project(path: ':module_home', configuration: 'release')
-        debugCompile project(path: ':module_home', configuration: 'debug')
-        releaseCompile project(path: ':module_cat', configuration: 'release')
-        debugCompile project(path: ':module_cat', configuration: 'debug')
-        releaseCompile project(path: ':module_dog', configuration: 'release')
-        debugCompile project(path: ':module_dog', configuration: 'debug')
-    }
+    compile project(path: ':module_base')
+
+//    if (isRunAlone.toBoolean()) {
+//        releaseCompile project(path: ':module_base', configuration: 'release')
+//        debugCompile project(path: ':module_base', configuration: 'debug')
+//    } else {
+//        releaseCompile project(path: ':module_home', configuration: 'release')
+//        debugCompile project(path: ':module_home', configuration: 'debug')
+//        releaseCompile project(path: ':module_cat', configuration: 'release')
+//        debugCompile project(path: ':module_cat', configuration: 'debug')
+//        releaseCompile project(path: ':module_dog', configuration: 'release')
+//        debugCompile project(path: ':module_dog', configuration: 'debug')
+//    }
 }

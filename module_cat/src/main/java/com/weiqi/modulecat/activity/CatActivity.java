@@ -50,7 +50,7 @@ public class CatActivity extends BaseActivity {
         try {
             //TODO 可以用工具类优化
             Context homeContext = this.createPackageContext(com.weiqi.modulebase.BuildConfig
-                            .isRunAlone ? "com.weiqi.home" : "com.weiqi.test",
+                            .isAppBuild ? "com.weiqi.home" : "com.weiqi.test",
                     CONTEXT_IGNORE_SECURITY);
             SharedPreferences homeContextSharedPreferences = homeContext.getSharedPreferences
                     ("feeding", Context.MODE_WORLD_READABLE | Context.MODE_WORLD_WRITEABLE);

@@ -12,7 +12,7 @@ import com.weiqi.modulebase.moduleinterface.provider.ICatProvider;
 
 public class CatModuleService {
     private static boolean hasModule() {
-        return !BuildConfig.isRunAlone && ModuleManager.getInstance().hasModule(ICatProvider
+        return !BuildConfig.isAppBuild && ModuleManager.getInstance().hasModule(ICatProvider
                 .CAT_SERVICE);
     }
 

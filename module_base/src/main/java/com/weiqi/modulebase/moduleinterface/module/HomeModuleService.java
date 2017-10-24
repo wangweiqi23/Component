@@ -11,7 +11,7 @@ import com.weiqi.modulebase.moduleinterface.provider.IHomeProvider;
 
 public class HomeModuleService {
     private static boolean hasModule() {
-        return BuildConfig.isRunAlone && ModuleManager.getInstance().hasModule(IHomeProvider
+        return BuildConfig.isAppBuild && ModuleManager.getInstance().hasModule(IHomeProvider
                 .HOME_SERVICE);
     }
 

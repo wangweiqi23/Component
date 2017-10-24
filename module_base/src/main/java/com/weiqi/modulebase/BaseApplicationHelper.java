@@ -27,6 +27,7 @@ import com.weiqi.slog.util.ZoneOffset;
 
 import java.util.ArrayList;
 
+
 /**
  * 公共 初始化
  * Created by alexwangweiqi on 17/9/19.
@@ -36,10 +37,10 @@ public class BaseApplicationHelper {
 
     public static void init(boolean debug, Application context) {
 
-        boolean isRunAlone = BuildConfig.isRunAlone;
+        boolean isAppBuild = BuildConfig.isAppBuild;
 
         initLog(debug, context);
-        SLog.d("BaseAppHelper","debug:"+ debug+" isRunAlone:"+isRunAlone);
+        SLog.d("BaseAppHelper","debug:"+ debug+" isAppBuild:"+isAppBuild);
 
         if (debug) {
             ARouter.openLog();
@@ -47,7 +48,7 @@ public class BaseApplicationHelper {
         }
         ARouter.init(context);
 
-        ContextUtil.init(isRunAlone, context);
+        ContextUtil.init(isAppBuild, context);
 
         ToastUtil.init(context);
         AccountManager.init();

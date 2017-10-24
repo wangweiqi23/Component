@@ -1,14 +1,17 @@
 package com.weiqi.plugin
 
 import com.android.builder.internal.ClassFieldImpl
-import org.apache.commons.codec.digest.DigestUtils;
-import org.gradle.api.*;
+import org.apache.commons.codec.digest.DigestUtils
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.file.FileTree
 
 /**
  * Created by alexwangweiqi on 17/10/20.
  */
 
-class BuildPlugin implements Plugin<Project>{
+class BuildPlugin implements Plugin<Project> {
 
     static final String MAP_SEPARATOR = "#"
 
@@ -65,18 +68,19 @@ class BuildPlugin implements Plugin<Project>{
 
         project.setProperty("isRunAlone", isRunAlone)
 
+        if (assembleTask.isClean) {
+            FileTree tree = project.fileTree(dir: "../componentrelease/")
+            tree.include '**/*.aar'
+            tree.each {
+                File file ->
+                    file.delete()
+            }
+            println("clean componentrelease files :" + tree.dir.absolutePath);
+        }
+
         //根据配置添加各种组件依赖，并且自动化生成组件加载代码
         if (isRunAlone) {
             project.apply plugin: 'com.android.application'
-            if (!module.equals(mainmodulename)) {
-//                project.android.sourceSets {
-//                    main {
-//                        manifest.srcFile 'src/main/runalone/AndroidManifest.xml'
-//                        java.srcDirs = ['src/main/java', 'src/main/runalone/java']
-//                        res.srcDirs = ['src/main/res', 'src/main/runalone/res']
-//                    }
-//                }
-            }
             System.out.println("apply plugin is " + 'com.android.application');
             if ((assembleTask.isAssemble || assembleTask.isBuild || assembleTask.isTinkerPatch)
                     && module.equals(compilemodule)) {
@@ -111,11 +115,12 @@ class BuildPlugin implements Plugin<Project>{
 
         if ((assembleTask.isAssemble || assembleTask.isBuild) && project.hasProperty(IS_APP_BUILD)) {
             boolean isApp = compilemodule.equals(mainmodulename)
+            println("get project isAppBuild: " + project.property("isAppBuild") + " isApp " + isApp.toString());
             project.setProperty(IS_APP_BUILD, isApp)
             project.extensions.android.buildTypes.all { buildType ->
                 addBuildConfigField(new ClassFieldImpl("boolean", IS_APP_BUILD, isApp.toString()))
             }
-            System.out.println("set isAppBuild " + isApp.toString());
+            println("set isAppBuild " + isApp.toString());
         }
 
 
@@ -163,6 +168,8 @@ class BuildPlugin implements Plugin<Project>{
                 assembleTask.modules.add(strs.length > 1 ? strs[strs.length - 2] : "all");
             } else if (task.toUpperCase().contains("TINKERPATCH")) {
                 assembleTask.isTinkerPatch = true;
+            } else if (task.toUpperCase().contains("CLEAN")) {
+                assembleTask.isClean = true;
             }
         }
         return assembleTask
@@ -177,11 +184,8 @@ class BuildPlugin implements Plugin<Project>{
     private void compileComponents(AssembleTask assembleTask, Project project) {
         String debugComponents;
         String releaseComponents;
-//        String components;
-//        String compileType;
-//        String compileConfiguration;
 
-        debugComponents = (String) project.properties.get("debugComponent")
+        debugComponents = (String) project.properties.get("compileComponent")
         releaseComponents = (String) project.properties.get("compileComponent")
 
         if (assembleTask.isBuild || assembleTask.isTinkerPatch) {
@@ -207,7 +211,6 @@ class BuildPlugin implements Plugin<Project>{
                 addDependency(project, dependency, DEBUG_COMPILE, DEBUG)
             }
         }
-
     }
 
     private void addReleaseDependency(Project project, String releaseComponents) {
@@ -219,76 +222,125 @@ class BuildPlugin implements Plugin<Project>{
                 addDependency(project, dependency, RELEASE_COMPILE, RELEASE)
             }
         }
-
     }
 
 
     private void addDependency(Project project, String dependency,
                                String compileType, String compileConfiguration) {
         println("comp is " + dependency)
-        if (dependency.contains(":")) {
-            String module = dependency.split(":")[1]
-            HashMap oldMap = new HashMap()
-            HashMap newMap = new HashMap()
-            File aarFile = project.file(getComponentAarFilePath(module, compileConfiguration))
+        if (dependency.contains(":")) {//依赖 module
+            project.dependencies.add(compileType,
+                    project.dependencies.project(path: dependency, configuration: compileConfiguration))
+            println("add dependency project: " + dependency + ", build type:" + compileConfiguration);
 
-            if (!aarStable) {
-                oldMap = new HashMap()
-                File hashFile = project.file(getHashFilePath(module, compileConfiguration))
-                if (hashFile.exists()) {
-                    oldMap = parseMap(hashFile)
-                    hashFile.write("")
-                } else {
-                    hashFile.createNewFile()
-                }
+        } else {//依赖 module aar
+            String module = dependency
+            println("add dependency " + module + " aar")
+            long lastModifiedModuleAarFile = 0
+            long lastModifiedCompilerAarFile = 0
 
-                newMap = getHashMap(project, module, hashFile)
+            long lastModifiedModuleDir = getModuleLastModified(project, module)
 
-                println("$compileConfiguration module $module change: " + !newMap.equals(oldMap))
-
+            File compileAarFile = project.file(getComponentAarFilePath(module, compileConfiguration))
+            if (compileAarFile.exists()) {
+                lastModifiedCompilerAarFile = compileAarFile.lastModified()
             }
 
-            if (aarStable || newMap.equals(oldMap)) {
-                if (aarFile.exists()) {
-                    project.dependencies.add(compileType, dependency + "-" + compileConfiguration + "@aar")
-                    println("add dependency : " + dependency + "-" + compileConfiguration + "@aar");
-                    return
-                } else {
-                    // 检查该module目录下是否已生成aar，已生成复制到componentrelease下
-                    File infile = project.file(getModuleAarFilePath(module, compileConfiguration))
-                    if (infile.exists()) {
-                        File outfile = project.file("../componentrelease")
-                        File desFile = project.file(module + "-" + compileConfiguration + ".aar");
-                        project.copy {
-                            from infile
-                            into outfile
-                            rename {
-                                String fileName -> desFile.name
-                            }
-                        }
-                        project.dependencies.add(compileType, dependency + "-" + compileConfiguration + "@aar")
-                        println("copy to component; add dependency : "
-                                + dependency + "-" + compileConfiguration + "@aar");
-                        return
-                    }
+            File moduleAarFile = project.file(getModuleAarFilePath(module, compileConfiguration))
+            if (moduleAarFile.exists()) {
+                lastModifiedModuleAarFile = moduleAarFile.lastModified()
+            }
 
+            println("add dependency module aar: " + dependency + ", build type:" + compileConfiguration + " lastModifiedModuleDir:" + lastModifiedModuleDir
+                    + " lastModifiedModuleAarFile:" + lastModifiedModuleAarFile + " lastModifiedCompilerAarFile:" + lastModifiedCompilerAarFile);
+
+            if (lastModifiedCompilerAarFile > 0 && lastModifiedCompilerAarFile > lastModifiedModuleDir) {
+                project.dependencies.add(compileType, ':' + module + "-" + compileConfiguration + "@aar")
+                println("add dependency : " + ':' + module + "-" + compileConfiguration + "@aar")
+                return
+            } else if (lastModifiedModuleAarFile > lastModifiedModuleDir && moduleAarFile.exists()) {
+                //检查该module目录下是否已生成aar，已生成复制到componentrelease下
+
+                //未生成aar，依赖module工程
+                if (compileAarFile.exists()) {
+                    compileAarFile.delete()
                 }
+
+                File outfile = project.file("../componentrelease")
+                project.copy {
+                    from moduleAarFile
+                    into outfile
+                    rename {
+                        String fileName -> moduleAarFile.name
+                    }
+                }
+                project.dependencies.add(compileType, ':' + module + "-" + compileConfiguration + "@aar")
+                println("copy to component; add dependency " + ':' + module + "-" + compileConfiguration + "@aar");
+                return
             }
 
             //未生成aar，依赖module工程
-            if (aarFile.exists()) {
-                aarFile.delete()
+            if (compileAarFile.exists()) {
+                compileAarFile.delete()
             }
             project.dependencies.add(compileType,
                     project.dependencies.project(path: ':' + module, configuration: compileConfiguration))
             println("aar not exist, add  $compileConfiguration dependency project: " + module);
 
+//            HashMap oldMap = new HashMap()
+//            HashMap newMap = new HashMap()
+//            File aarFile = project.file(getComponentAarFilePath(module, compileConfiguration))
 
-        } else {
-            project.dependencies.add(compileType,
-                    project.dependencies.project(path: ':' + dependency,
-                            configuration: compileConfiguration))
-            println("add dependency project: " + dependency + ", build type:" + compileConfiguration);
+//            if (!aarStable) {
+//                oldMap = new HashMap()
+//                File hashFile = project.file(getHashFilePath(module, compileConfiguration))
+//                if (hashFile.exists()) {
+//                    oldMap = parseMap(hashFile)
+//                    hashFile.write("")
+//                } else {
+//                    hashFile.createNewFile()
+//                }
+//
+//                newMap = getHashMap(project, module, hashFile)
+//
+//                println("$compileConfiguration module $module change: " + !newMap.equals(oldMap))
+//
+//            }
+//
+//            if (aarStable || newMap.equals(oldMap)) {
+//                if (aarFile.exists()) {
+//                    project.dependencies.add(compileType, dependency + "-" + compileConfiguration + "@aar")
+//                    println("add dependency : " + dependency + "-" + compileConfiguration + "@aar");
+//                    return
+//                } else {
+//                    // 检查该module目录下是否已生成aar，已生成复制到componentrelease下
+//                    File infile = project.file(getModuleAarFilePath(module, compileConfiguration))
+//                    if (infile.exists()) {
+//                        File outfile = project.file("../componentrelease")
+//                        File desFile = project.file(module + "-" + compileConfiguration + ".aar");
+//                        project.copy {
+//                            from infile
+//                            into outfile
+//                            rename {
+//                                String fileName -> desFile.name
+//                            }
+//                        }
+//                        project.dependencies.add(compileType, dependency + "-" + compileConfiguration + "@aar")
+//                        println("copy to component; add dependency : "
+//                                + dependency + "-" + compileConfiguration + "@aar");
+//                        return
+//                    }
+//
+//                }
+//            }
+//
+//            //未生成aar，依赖module工程
+//            if (aarFile.exists()) {
+//                aarFile.delete()
+//            }
+//            project.dependencies.add(compileType,
+//                    project.dependencies.project(path: ':' + module, configuration: compileConfiguration))
+//            println("aar not exist, add  $compileConfiguration dependency project: " + module);
         }
     }
 
@@ -302,6 +354,21 @@ class BuildPlugin implements Plugin<Project>{
 
     private String getModuleAarFilePath(String module, String type) {
         return "../" + module + "/build/outputs/aar/" + module + "-" + type + ".aar"
+    }
+
+    private long getModuleLastModified(Project project, String module) {
+        long datetime = 0
+        File moduleDir = project.file("../" + module + "/")
+        datetime = moduleDir.lastModified()
+        File[] fileList = moduleDir.listFiles()
+        if (fileList != null) {
+            for (File file : fileList) {
+                if (file.isDirectory() && file.lastModified() > datetime) {
+                    datetime = f.lastModified()
+                }
+            }
+        }
+        return datetime
     }
 
     private String getTaskName(String type) {
@@ -369,6 +436,7 @@ class BuildPlugin implements Plugin<Project>{
         boolean isBuild = false;
         boolean isDebug = false;
         boolean isTinkerPatch = false;
+        boolean isClean = false;
         List<String> modules = new ArrayList<>();
     }
 }
