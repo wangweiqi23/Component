@@ -1,4 +1,5 @@
 <resources>
+    <string name="rob_service">模拟</string>
     <string name="app_name">module_base</string>
     <string name="need_login">请在主模块登陆</string>
 

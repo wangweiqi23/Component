@@ -287,60 +287,6 @@ class BuildPlugin implements Plugin<Project> {
                     project.dependencies.project(path: ':' + module, configuration: compileConfiguration))
             println("aar not exist, add  $compileConfiguration dependency project: " + module);
 
-//            HashMap oldMap = new HashMap()
-//            HashMap newMap = new HashMap()
-//            File aarFile = project.file(getComponentAarFilePath(module, compileConfiguration))
-
-//            if (!aarStable) {
-//                oldMap = new HashMap()
-//                File hashFile = project.file(getHashFilePath(module, compileConfiguration))
-//                if (hashFile.exists()) {
-//                    oldMap = parseMap(hashFile)
-//                    hashFile.write("")
-//                } else {
-//                    hashFile.createNewFile()
-//                }
-//
-//                newMap = getHashMap(project, module, hashFile)
-//
-//                println("$compileConfiguration module $module change: " + !newMap.equals(oldMap))
-//
-//            }
-//
-//            if (aarStable || newMap.equals(oldMap)) {
-//                if (aarFile.exists()) {
-//                    project.dependencies.add(compileType, dependency + "-" + compileConfiguration + "@aar")
-//                    println("add dependency : " + dependency + "-" + compileConfiguration + "@aar");
-//                    return
-//                } else {
-//                    // 检查该module目录下是否已生成aar，已生成复制到componentrelease下
-//                    File infile = project.file(getModuleAarFilePath(module, compileConfiguration))
-//                    if (infile.exists()) {
-//                        File outfile = project.file("../componentrelease")
-//                        File desFile = project.file(module + "-" + compileConfiguration + ".aar");
-//                        project.copy {
-//                            from infile
-//                            into outfile
-//                            rename {
-//                                String fileName -> desFile.name
-//                            }
-//                        }
-//                        project.dependencies.add(compileType, dependency + "-" + compileConfiguration + "@aar")
-//                        println("copy to component; add dependency : "
-//                                + dependency + "-" + compileConfiguration + "@aar");
-//                        return
-//                    }
-//
-//                }
-//            }
-//
-//            //未生成aar，依赖module工程
-//            if (aarFile.exists()) {
-//                aarFile.delete()
-//            }
-//            project.dependencies.add(compileType,
-//                    project.dependencies.project(path: ':' + module, configuration: compileConfiguration))
-//            println("aar not exist, add  $compileConfiguration dependency project: " + module);
         }
     }
 
@@ -358,16 +304,17 @@ class BuildPlugin implements Plugin<Project> {
 
     private long getModuleLastModified(Project project, String module) {
         long datetime = 0
-        File moduleDir = project.file("../" + module + "/")
+        File moduleDir = project.file("../" + module)
         datetime = moduleDir.lastModified()
-        File[] fileList = moduleDir.listFiles()
-        if (fileList != null) {
-            for (File file : fileList) {
-                if (file.isDirectory() && file.lastModified() > datetime) {
-                    datetime = f.lastModified()
+        File moduleSrc = project.file("../" + module + "/src/main")
+        moduleSrc.eachDirRecurse (
+                { file ->
+                    println("moduleSrc fileName: " + file.absolutePath+" datetime:"+datetime);
+                    if (file.isDirectory() && file.lastModified() > datetime) {
+                        datetime = file.lastModified()
+                    }
                 }
-            }
-        }
+        )
         return datetime
     }
 
@@ -389,42 +336,6 @@ class BuildPlugin implements Plugin<Project> {
         String hash = DigestUtils.shaHex(inputStream)
         inputStream.close()
         return hash
-    }
-
-    private HashMap getHashMap(Project project, String module, File hashFile) {
-        HashMap map = new HashMap()
-
-        if (hashFile.exists()) {
-            File dir = project.file("../" + module + "/src/main")
-            dir.eachFileRecurse(
-                    { file ->
-                        if (!file.isDirectory()) {
-                            def filePath = file.getPath()
-                            def fileHash = getFileHash(file)
-
-                            map.put(filePath, fileHash)
-                            hashFile.append(format(filePath, fileHash))
-                        }
-                    }
-            )
-        }
-
-        return map
-    }
-
-    private HashMap parseMap(File hashFile) {
-        def hashMap = [:]
-        if (hashFile.exists()) {
-            hashFile.eachLine {
-                List list = it.split(MAP_SEPARATOR)
-                if (list.size() == 2) {
-                    hashMap.put(list[0], list[1])
-                }
-            }
-        } else {
-            println "$hashFile does not exist"
-        }
-        return hashMap
     }
 
     private String format(String path, String hash) {

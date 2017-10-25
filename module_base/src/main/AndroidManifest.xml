@@ -1,12 +1,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 
           package="com.weiqi.modulebase"
->
-
-    <application android:allowBackup="true"
-                 android:label="@string/app_name"
-                 android:supportsRtl="true"
     >
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        >
+
+        <service
+            android:name=".service.RobService"
+            android:label="@string/rob_service"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/robservice"/>
+        </service>
 
     </application>
 
