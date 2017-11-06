@@ -12,7 +12,7 @@
 
 模块|Demo apk
 ---|---
-最新版本|[Download](https://github.com/wangweiqi23/SLog/blob/master/image/app-debug.apk)
+最新版本|[Download](https://github.com/wangweiqi23/Component/blob/master/image/app-debug.apk)
 
 #### Demo展示
 
@@ -37,6 +37,5 @@
 #### 四、其他
 
 1. 沟通和交流
-
-    我的简书：http://www.jianshu.com/users/884c2e4b6e38/timeline
+    [我的简书](http://www.jianshu.com/users/884c2e4b6e38/timeline)
     
