@@ -16,9 +16,7 @@
 
 #### Demo展示
 
-##### [去看看更多效果图](https://github.com/wangweiqi23/SLog/blob/master/image)
-
-<img src='https://github.com/wangweiqi23/SLog/blob/master/image/JSON.png'/>
+<img src='http://upload-images.jianshu.io/upload_images/2140123-e723f1663aae6976.png'/>
 
 #### 一、功能介绍
 1. **代码结构组件化**
